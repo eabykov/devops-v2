@@ -1,0 +1,10 @@
+theme: jekyll-theme-minimal
+logo: /devops-thumb.png
+title: Курс обучения DevOps за 9 недель
+description: |
+  Каждая неделя включает в себя теоретические знания, вопросы к ним и практические задания
+email: jenyabykov322@yandex.ru
+github_username: eabykov
+github:
+  is_project_page: false
+show_downloads: false
