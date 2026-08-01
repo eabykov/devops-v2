@@ -52,15 +52,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - для блока кода — теги ставятся **снаружи** ограждения, с тем же отступом, что у ```` ``` ````;
 - для inline-кода — теги ставятся вокруг обратных кавычек прямо в строке.
 
-Перед коммитом проверяй настоящим парсером Liquid, а не глазами:
+Исключение — сам этот файл: он приводит Liquid-теги как текст и потому уронил бы сборку. Поэтому `CLAUDE.md` добавлен в `exclude` в `_config.yml` и на сайт не попадает. Если добавляешь в `exclude` что-то ещё, помни: указание своего списка заменяет стандартный целиком, поэтому в нём перечислены и обычные служебные пути.
+
+Перед коммитом проверяй настоящим парсером Liquid, а не глазами (и учитывай `exclude` — проверять надо ровно то, что рендерит Jekyll):
 
 ```bash
 gem install --user-install --no-document liquid -v 4.0.4
-ruby -e '$LOAD_PATH.unshift(File.expand_path("~/.gem/ruby/2.6.0/gems/liquid-4.0.4/lib")); require "liquid"
-Dir.glob("*.md").each { |f| begin; Liquid::Template.parse(File.read(f)); rescue => e; puts "#{f}: #{e.message}"; end }'
+ruby -e '$LOAD_PATH.unshift(File.expand_path("~/.gem/ruby/2.6.0/gems/liquid-4.0.4/lib"))
+require "liquid"; require "yaml"
+skip = YAML.load_file("_config.yml")["exclude"] || []
+(Dir.glob("*.md") - skip).each { |f| begin; Liquid::Template.parse(File.read(f)); rescue => e; puts "#{f}: #{e.message}"; end }'
 ```
 
 Проверка обязана быть двойной: файл не только разбирается без ошибок, но и после `render` сохраняет содержимое шаблонов.
+
+**Запускай её последним действием перед коммитом.** Ровно на этом уже обожглись: проверку прогнали, потом дописали текст с тегами — и сборка снова упала.
 
 ## Стиль текста
 

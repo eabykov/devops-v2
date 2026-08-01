@@ -6,3 +6,20 @@ email: jenyabykov322@yandex.ru
 github_username: distinguished-sre
 show_downloads: false
 lang: ru
+
+# Служебные файлы, которые не должны попадать на сайт.
+# CLAUDE.md — инструкция для Claude Code, а не страница курса; вдобавок
+# в ней намеренно приводятся Liquid-теги как текст, на чём падала сборка.
+# Остальное — стандартный список Jekyll: указав exclude, мы заменяем его целиком.
+exclude:
+  - CLAUDE.md
+  - Gemfile
+  - Gemfile.lock
+  - gemfiles
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - .sass-cache
+  - .jekyll-cache
