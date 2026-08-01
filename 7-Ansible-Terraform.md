@@ -178,6 +178,7 @@ output "public_ips" {
 
 #### Пример простого playbook
 
+{% raw %}
 ```yaml
 # install-web.yml
 - name: Установка и настройка nginx
@@ -222,8 +223,10 @@ output "public_ips" {
         name: nginx
         state: restarted
 ```
+{% endraw %}
 
 Файл шаблона `templates/index.html.j2` (Jinja2):
+{% raw %}
 ```html
 <!DOCTYPE html>
 <html>
@@ -235,6 +238,7 @@ output "public_ips" {
 </body>
 </html>
 ```
+{% endraw %}
 
 Запуск: `ansible-playbook -i inventory.ini install-web.yml`
 
@@ -517,6 +521,7 @@ roles/
    ```
 
 3. Создай playbook `web.yml`:
+   {% raw %}
    ```yaml
    - name: Базовая настройка веб-сервера
      hosts: web
@@ -555,6 +560,7 @@ roles/
            state: started
            enabled: true
    ```
+   {% endraw %}
 
 4. Запусти:
    ```bash

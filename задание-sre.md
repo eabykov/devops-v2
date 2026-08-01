@@ -300,6 +300,7 @@ job:slo_burn_rate:rate1h
 
 **Что делаешь:** Настраиваешь production-ready routing с дедупликацией, группировкой и ингибицией.
 
+{% raw %}
 ```yaml
 # alertmanager/alertmanager.yml
 global:
@@ -355,6 +356,7 @@ inhibit_rules:
       - alertname =~ ".*"
     equal: ['instance']
 ```
+{% endraw %}
 
 **Подзадачи:**
 1. Зарегистрируй бесплатный webhook на `https://webhook.site` — подставь URL в конфиг
@@ -858,6 +860,7 @@ curl -X POST http://localhost:9090/-/reload
 **Что делаешь:** Создаёшь библиотеку SRE-скриптов, которую принесёшь на новую работу.
 
 **Скрипт 1 — System Health Report:**
+{% raw %}
 ```bash
 #!/bin/bash
 # ~/sre-bootstrap/scripts/health-report.sh
@@ -921,6 +924,7 @@ main() {
 
 main "$@"
 ```
+{% endraw %}
 
 **Скрипт 2 — Docker Cleanup (Toil Elimination):**
 ```bash
@@ -1104,6 +1108,7 @@ log "✅ Restore complete. Public tables: ${TABLE_COUNT// /}"
 ```
 
 **Prometheus алерты для PostgreSQL:**
+{% raw %}
 ```yaml
 # rules/postgresql_alerts.yml
 groups:
@@ -1139,6 +1144,7 @@ groups:
         annotations:
           summary: "Обнаружены deadlocks в PostgreSQL"
 ```
+{% endraw %}
 
 ---
 

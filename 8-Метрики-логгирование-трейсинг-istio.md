@@ -339,6 +339,7 @@ eBPF — революционная технология ядра Linux, поз�
 
 2. **Как выглядит правило алерта в Prometheus и что означает поле `for`?**
    **Ответ:**
+   {% raw %}
    ```yaml
    - alert: HostOutOfMemory
      expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10
@@ -348,6 +349,7 @@ eBPF — революционная технология ядра Linux, поз�
      annotations:
        description: "На {{ $labels.instance }} осталось менее 10% памяти"
    ```
+   {% endraw %}
    `for` защищает от ложных срабатываний на кратковременных всплесках: при `0m` алерт сработает от единичного выброса
 
 3. **Что такое золотые сигналы и как они соотносятся с методом RED?**
@@ -645,6 +647,7 @@ sum(rate(prometheus_http_requests_total[5m]))
 
    И новую ветку в `do_GET`, рядом с `/healthz`:
 
+   {% raw %}
    ```python
            elif self.path == "/metrics":
                lines = [
@@ -660,6 +663,7 @@ sum(rate(prometheus_http_requests_total[5m]))
                lines.append("notes_up 1")
                self.respond(200, "\n".join(lines) + "\n")
    ```
+   {% endraw %}
 
    Обрати внимание на выбор типов: `counter` только растёт (число запросов), `gauge` может расти и падать. Это ровно то различие, которое разбиралось в теории
 
