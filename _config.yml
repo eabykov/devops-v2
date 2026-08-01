@@ -1,7 +1,8 @@
 theme: jekyll-theme-cayman
 logo: /devops-thumb.png
 title: Курс обучения DevOps от Евгения Быкова
-description: Каждая тема включает в себя теоретические знания, вопросы к ним и практические задания
+description: Девять тем от Linux до Kubernetes и GitOps. Теория простым языком, вопросы с ответами и практика на сквозном проекте
 email: jenyabykov322@yandex.ru
-github_username: eabykov
+github_username: distinguished-sre
 show_downloads: false
+lang: ru
