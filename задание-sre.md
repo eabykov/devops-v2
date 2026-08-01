@@ -1,8 +1,16 @@
+### [Вернуться к главной странице, списку всех тем](README.md)
+
 # 🛡️ SRE Подготовительный план
 
 ### 3–4 дня до выхода на новую должность · Solo SRE · Greenfield Department
 
 > **Философия плана:** Каждое задание — это не «ознакомление», а минимально жизнеспособный артефакт (MVA), который ты сможешь принести на новое место работы как готовый инструмент. К концу 4-го дня у тебя будет репозиторий с реальными конфигами, скриптами и шаблонами.
+
+> **Что нужно пройти заранее:** весь курс, тема за темой. Этот план не учит с нуля — он собирает пройденное в рабочие артефакты в темпе, близком к боевому. Опорные темы: [4](4-Docker-и-Compose.md) (Compose), [5](5-Kubernetes-helm.md) (Kubernetes, пробы, HPA, rollback), [8](8-Метрики-логгирование-трейсинг-istio.md) (PromQL, SLO, burn rate, алерты), [3](3-Git-Gitlab-Github.md) (CI/CD), [1](1-Linux-Bash-Текстовые-редакторы.md) (bash-скрипты)
+>
+> **Чем отличается от [задания для инженера мониторинга](задание-мониторинг.md):** то задание проверяет один навык вглубь и рассчитано на 12–16 часов. Этот план — четыре дня по 8 часов и охватывает весь цикл эксплуатации: мониторинг, логи, Kubernetes, CI/CD, базы, инциденты и планирование мощностей
+>
+> **Как проходить:** не подглядывая в ответы предыдущих тем. Если приходится возвращаться за каждой командой — вернись и добей соответствующую тему, план от этого только выиграет
 
 ---
 
@@ -23,7 +31,7 @@ bc --version              # нужен для health-report.sh
 ```
 
 **Стек окружения:**
-- Ubuntu 22.04 LTS (локально или VM, минимум 16 GB RAM для всех стеков одновременно)
+- Ubuntu 24.04 LTS (локально или VM, минимум 16 GB RAM для всех стеков одновременно)
 - Docker 24+ / Docker Compose v2
 - kubectl + minikube
 - GitLab аккаунт (gitlab.com бесплатный tier)
@@ -43,11 +51,10 @@ bc --version              # нужен для health-report.sh
 **Что делаешь:** Поднимаешь полный observability-стек через Docker Compose. Включаешь `fake-service` — он генерирует реалистичные HTTP-метрики (`http_requests_total`, `http_request_duration_seconds`), без которых задания 1.2 и 1.4 невыполнимы.
 
 ```yaml
-# ~/sre-bootstrap/monitoring/docker-compose.yml
-version: '3.8'
+# ~/sre-bootstrap/monitoring/compose.yml
 services:
   prometheus:
-    image: prom/prometheus:v2.51.0
+    image: prom/prometheus:v3.1.0
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus/rules:/etc/prometheus/rules
@@ -65,7 +72,7 @@ services:
     ports: ["9093:9093"]
 
   grafana:
-    image: grafana/grafana:10.4.0
+    image: grafana/grafana:11.4.0
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=sre_admin
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -415,8 +422,7 @@ inhibit_rules:
 **Что делаешь:** Разворачиваешь ELK с правильными index policies и structured logging.
 
 ```yaml
-# ~/sre-bootstrap/logging/docker-compose.yml
-version: '3.8'
+# ~/sre-bootstrap/logging/compose.yml
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
@@ -594,7 +600,7 @@ spec:
         - name: demo-app
           # ✅ nginx:alpine слушает на порту 80, НЕ 8080.
           # Используем его корректно — проверяем реально существующий путь /
-          image: nginx:alpine
+          image: nginx:1.27.3-alpine
           ports:
             - containerPort: 80
           resources:
@@ -732,9 +738,7 @@ kubectl delete pod load-generator -n production
 > ℹ️ KrakenD запускается отдельным docker compose, но шлёт метрики в уже работающий Prometheus из Дня 1. Убедись что monitoring-стек запущен.
 
 ```yaml
-# ~/sre-bootstrap/monitoring/krakend/docker-compose.yml
-# ✅ docker-compose для KrakenD (отсутствовал в предыдущей версии)
-version: '3.8'
+# ~/sre-bootstrap/monitoring/krakend/compose.yml
 services:
   krakend:
     image: devopsfaith/krakend:2.7
@@ -747,7 +751,7 @@ services:
 
   # Простой backend для тестирования circuit breaker и rate limiting
   httpbin:
-    image: kennethreitz/httpbin
+    image: kennethreitz/httpbin:latest  # у образа нет версионных тегов — редкое исключение из правила
     ports: ["8091:80"]
 ```
 
@@ -974,8 +978,7 @@ done
 **Что делаешь:** Строишь полный цикл операций с PostgreSQL — от бэкапов до мониторинга.
 
 ```yaml
-# ~/sre-bootstrap/database/docker-compose.yml
-version: '3.8'
+# ~/sre-bootstrap/database/compose.yml
 services:
   postgres:
     image: postgres:16-alpine
@@ -1163,7 +1166,7 @@ variables:
 # ──────────────── VALIDATE ────────────────
 lint-dockerfile:
   stage: validate
-  image: hadolint/hadolint:latest-alpine
+  image: hadolint/hadolint:2.12.0-alpine
   script:
     - hadolint Dockerfile
   rules:
@@ -1194,7 +1197,7 @@ build-image:
 # ──────────────── SECURITY ────────────────
 trivy-scan:
   stage: security
-  image: aquasec/trivy:latest
+  image: aquasec/trivy:0.58.1
   script:
     - trivy image --exit-code 0 --severity LOW,MEDIUM --format table $DOCKER_IMAGE
     - trivy image --exit-code 1 --severity HIGH,CRITICAL $DOCKER_IMAGE
@@ -1203,7 +1206,7 @@ trivy-scan:
 
 secrets-scan:
   stage: security
-  image: trufflesecurity/trufflehog:latest
+  image: trufflesecurity/trufflehog:3.88.0
   script:
     - trufflehog git file://. --only-verified --fail
   allow_failure: true
@@ -1229,7 +1232,7 @@ deploy-staging:
 # ──────────────── INTEGRATION TEST ────────────────
 integration-tests:
   stage: integration-test
-  image: curlimages/curl:latest
+  image: curlimages/curl:8.11.1
   script:
     - curl -f --retry 5 --retry-delay 3 https://staging.example.com/ || exit 1
     - echo "✅ Integration tests passed"
@@ -1470,7 +1473,7 @@ docker compose stop grafana
 docker compose start grafana
 # MTTR = время от kill до restart_policy поднял контейнер (если настроен restart: always)
 
-# Важно: убедись что в docker-compose.yml есть restart: unless-stopped для Grafana
+# Важно: убедись что в compose.yml есть restart: unless-stopped для Grafana
 ```
 
 **Упражнение 2 — Pod CrashLoopBackOff в Kubernetes:**
@@ -1597,7 +1600,7 @@ predict_linear(
 ```
 ~/sre-bootstrap/
 ├── monitoring/
-│   ├── docker-compose.yml          ✅ Production-ready стек + demo-app
+│   ├── compose.yml                 ✅ Production-ready стек + demo-app
 │   ├── prometheus/prometheus.yml   ✅ Scrape configs для всех сервисов
 │   ├── prometheus/rules/
 │   │   ├── slo_recording_rules.yml ✅ Recording rules (burn rate)
@@ -1606,11 +1609,11 @@ predict_linear(
 │   ├── alertmanager/alertmanager.yml ✅ Routing + inhibit rules
 │   ├── grafana/provisioning/       ✅ Datasource as code
 │   ├── krakend/
-│   │   ├── docker-compose.yml      ✅ KrakenD + httpbin
+│   │   ├── compose.yml             ✅ KrakenD + httpbin
 │   │   └── krakend.json            ✅ Rate limit + circuit breaker
 │   └── slo-definitions.yml         ✅ SLO фреймворк
 ├── logging/
-│   ├── docker-compose.yml          ✅ ELK + depends_on + healthchecks
+│   ├── compose.yml                 ✅ ELK + depends_on + healthchecks
 │   ├── logstash/pipeline/nginx.conf ✅ COMBINEDAPACHELOG pipeline
 │   └── filebeat/filebeat.yml       ✅ Docker autodiscover
 ├── kubernetes/
@@ -1618,7 +1621,7 @@ predict_linear(
 │   ├── hpa.yml                     ✅ Autoscaling
 │   └── ingress.yml                 ✅ Nginx Ingress + rate limiting
 ├── database/
-│   └── docker-compose.yml          ✅ PostgreSQL + exporter + healthcheck
+│   └── compose.yml                 ✅ PostgreSQL + exporter + healthcheck
 ├── scripts/
 │   ├── health-report.sh            ✅ System health check
 │   ├── docker-cleanup.sh           ✅ Toil elimination
